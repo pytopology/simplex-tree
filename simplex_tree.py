@@ -1,4 +1,5 @@
 from node import Node
+import itertools
 
 
 class SimplexTree:
@@ -19,9 +20,9 @@ class SimplexTree:
         _simplex_prefix.append(simplex_name)
         return _simplex_prefix
 
-    def insert_sibling(self, node, siblings, parent_simplex_name):
+    def insert_sibling(self, node, siblings, parent_simplex_name, filtration):
         '''
-        Iterative Method to insert the sibling in horizontal direction. 
+        Iterative Method to insert the sibling in horizontal direction.
         This method also calls the insert_child() method to insert the
         children of the siblings.
 
@@ -32,7 +33,7 @@ class SimplexTree:
         '''
         if len(siblings) == 0 or siblings is None:
             return
-        print("Inserting siblings", siblings)
+        # print("Inserting siblings", siblings)
         temp = node
 
         while(temp.next is not None):
@@ -41,19 +42,21 @@ class SimplexTree:
             node_name = siblings[i]
             simplex_name = self.__get_simplex_name(
                 parent_simplex_name, node_name)
-            print("Inserting : ", node_name, "Parent Simplex name :",
-                  parent_simplex_name, "Simplex Name :", simplex_name)
+            # print("Inserting : ", node_name, "Parent Simplex name :",
+            #       parent_simplex_name, "Simplex Name :", simplex_name)
             new_node = self.__find(simplex_name)
             if new_node is None:
-                new_node = Node(node_name, simplex_name)
-                self.insert_child(new_node, simplex_name, siblings[i+1:])
+                new_node = Node(node_name, simplex_name, filtration)
+                self.insert_child(new_node, simplex_name,
+                                  siblings[i+1:], filtration)
                 temp.next = new_node
                 temp = new_node
             else:
-                print("Simplex :{} already exists".format(simplex_name))
-                self.insert_child(new_node, simplex_name, siblings[i+1:])
+                # print("Simplex :{} already exists".format(simplex_name))
+                self.insert_child(new_node, simplex_name,
+                                  siblings[i+1:], filtration)
 
-    def insert_child(self, parent, simplex_prefix, children):
+    def insert_child(self, parent, simplex_prefix, children, filtration):
         '''
         Recursive method to insert the children also calls the insert_siblings()
         method.
@@ -66,19 +69,19 @@ class SimplexTree:
         '''
         if len(children) == 0 or children is None:
             return
-        print("Inserting children", children)
+        # print("Inserting children", children)
         node_name = children[0]
         simplex_name = self.__get_simplex_name(simplex_prefix, node_name)
         node = self.__find(simplex_name)
         node_exist = node is not None
         if not node_exist:
-            node = Node(node_name, simplex_name, 0.0)
-        self.insert_child(node, simplex_name, children[1:])
-        self.insert_sibling(node, children[1:], simplex_prefix)
+            node = Node(node_name, simplex_name, filtration)
+        self.insert_child(node, simplex_name, children[1:], filtration)
+        self.insert_sibling(node, children[1:], simplex_prefix, filtration)
 
         # Node Children might not be enpty
         # Find the last node (TODO : Need to add appropriately to maintain order)
-        #last_child_node = parent.child
+        # last_child_node = parent.child
         if not node_exist:
             if parent.child is None:
                 parent.child = node
@@ -98,6 +101,20 @@ class SimplexTree:
         #   last_child_node.next = node
         # else:
         #   last_child_node = node
+    def __findsubsets(self, simplex, length):
+        return list(itertools.combinations(simplex, length))
+
+    def compute_boundaries(self, simplex):
+        '''
+        Compute the Boundary operator
+
+        Arguments:
+        simplex : Simplex for which we need to find the boundary operator
+        '''
+        found_simplex = self.__find(simplex)
+        if found_simplex:
+            return self.__findsubsets(simplex, len(simplex)-1)
+        return None
 
     def insert(self, _simplex, filtration=0.0):
         '''
@@ -109,17 +126,19 @@ class SimplexTree:
         '''
         simplex = _simplex
         simplex.sort()
-        if self.__find(simplex) is not None:
-            print("Simplex:", simplex, "is already present")
+        found_simplex = self.__find(simplex)
+        if found_simplex is not None:
+            # print("Simplex:", found_simplex, "is already present")
+            found_simplex.filtration_value = filtration
             return
         if self.head is None:
             # Create a root node
-            node = Node("x", filtration)
+            node = Node("x", 0.0)
             self.head = node
-            self.insert_child(self.head, [], simplex)
+            self.insert_child(self.head, [], simplex, filtration)
         else:
             node = self.head.child
-            self.insert_sibling(node, simplex, [])
+            self.insert_sibling(node, simplex, [], filtration)
 
     def find_simplex(self, simplex):
         '''
@@ -145,7 +164,6 @@ class SimplexTree:
         '''
         if self.head is None:
             return None
-        found = False
         temp = self.head.child
         found_simplex = None
         for i in simplex:
@@ -161,11 +179,43 @@ class SimplexTree:
             return found_simplex
         return None
 
+    def __get_simplices(self, node, dim=0, output=[]):
+        if node is None:
+            # No simplices available for the given dimension
+            return []
+        if dim == -1:
+            temp = node
+            while temp is not None:
+                # print(temp.simplex_name)
+                output.append(temp.simplex_name)
+                temp = temp.next
+            return output
+        temp_next = node
+        while (temp_next is not None):
+            # print("searching children of {}".format(temp_next.simplex_name))
+            output.extend(self.__get_simplices(temp_next.child, dim-1, []))
+            # print(output)
+            temp_next = temp_next.next
+        # print(output)
+        return output
+
+    def get_simplices(self, dim=0):
+        '''
+        Get Simplex by Dimensions
+        '''
+        if self.head is None:
+            return
+        outputs = self.__get_simplices(self.head, dim)
+        return outputs
+
     def delete(self):
         pass
 
-    def filteration(self, node):
-        pass
+    def filtration(self, node):
+        found_node = self.__find(node)
+        if found_node is None:
+            return
+        return found_node.filtration_value
 
     def print_siblings(self, node, prefix=""):
         '''
@@ -190,9 +240,9 @@ class SimplexTree:
         if node is None:
             return
         prefix = prefix + str(node.name)+","
-        print("(Child) :Simplex:(", prefix, ")", node.simplex_name)
+        print("Simplex: {} Filtration value :{}".format(
+            node.simplex_name, node.filtration_value))
         self.print_siblings(node.child)
-        # self.print_child(node.child,prefix)
 
     def print_tree(self, node=None):
         node = self.head
