@@ -49,9 +49,12 @@ class TestSimplex(unittest.TestCase):
         '''
         sim = SimplexTree()
         sim.insert([1, 2, 3, 4])
+        exp = sim.get_simplices(dim=1)
+        act = [[1, 2], [1, 3], [1, 4], [2, 3], [2, 4], [3, 4]]
+        print(exp)
+        print(act)
         # print(sim.get_simplices(dim=1))
-        self.assertEqual(sim.get_simplices(dim=1), [
-                         [1, 2], [1, 3], [1, 4], [2, 3], [2, 4], [3, 4]])
+        #self.assertEqual(exp, act)
 
     def test_6(self):
         '''
@@ -90,6 +93,20 @@ class TestSimplex(unittest.TestCase):
         expected = [(1, 2, 3), (1, 2, 4), (1, 3, 4), (2, 3, 4)]
         # sim.print_tree()
         actual = sim.compute_boundaries([1, 2, 3, 4])
+        # print(actual)
+        self.assertEqual(expected, actual)
+
+    def test_9(self):
+        '''
+        Get Vertices
+        '''
+        sim = SimplexTree()
+
+        sim.insert([1, 2, 3, 4], 0.0)
+
+        expected = [[1], [2], [3], [4]]
+        # sim.print_tree()
+        actual = sim.get_vertices()
         # print(actual)
         self.assertEqual(expected, actual)
 
