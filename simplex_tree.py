@@ -265,3 +265,12 @@ class SimplexTree:
     def print_tree(self, node=None):
         node = self.head
         self.print_siblings(node.child)
+
+    def _getdimension(self, simplex):
+         '''
+        dimension of simplex=no. of vertices-1
+        Arguments:
+        simplex : Input Simplex array eg. [1,2,3]
+        '''
+        pass
+
