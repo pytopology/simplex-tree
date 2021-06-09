@@ -34,7 +34,6 @@ class SimplexTree:
         if len(siblings) == 0 or siblings is None:
             return
         # print("Inserting siblings", siblings)
-        # TODO Mantain the sort order
         temp = node  # [1]
 
         for i in range(len(siblings)):  # [2,3] | [3] | []
