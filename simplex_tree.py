@@ -37,10 +37,11 @@ class SimplexTree:
         # TODO Mantain the sort order
         temp = node  # [1]
 
-        while(temp.next is not None):
-            temp = temp.next  # temp -> last node of the linked list
         for i in range(len(siblings)):  # [2,3] | [3] | []
             node_name = siblings[i]  # 2 | 3
+            while(temp.next is not None and temp.next.name < node_name):
+                temp = temp.next  # temp -> last node of the linked list
+
             simplex_name = self.__get_simplex_name(
                 parent_simplex_name, node_name)  # parent_simplex_name = [] , 2 => [2] | [],3 => [3]
             # print("Inserting : ", node_name, "Parent Simplex name :",
@@ -50,6 +51,7 @@ class SimplexTree:
                 new_node = Node(node_name, simplex_name, filtration)
                 self.insert_child(new_node, simplex_name,
                                   siblings[i+1:], filtration)
+                new_node.next = temp.next
                 temp.next = new_node  # [1].next = [2] | [2].next = [3]
                 temp = new_node  # temp [2] | temp [3]
             else:
