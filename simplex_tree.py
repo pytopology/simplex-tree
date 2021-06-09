@@ -3,6 +3,7 @@ import itertools
 import matplotlib.pyplot as plt
 import networkx as nx
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+import random
 
 
 class SimplexTree:
@@ -228,57 +229,113 @@ class SimplexTree:
         return outputs
 
     def __get_tuple(self, simplices, dim):
+        '''
+        Internal Method used to convert the list of simplices array 
+        into a tuple. For e.g [[1,2,3]] => [(1,2,3)]
+
+        Arguments:
+        simplices : list of simplices which needs to be converted into tuple
+        dim : Dimension of the input simplex
+
+        '''
         output = []
         for e in filter(lambda x: len(x) == dim, simplices):
             output.append(tuple(e))
         return output
 
     def __get_coordinates(self, vertices):
+        '''
+        Internal method used to generate the random coordinates for the vertices
+        of the simplicial complex
+
+        Arguments:
+        vertices : list of vertices
+        '''
+        max_x = 0
+        max_y = 0
+        max_z = 0
+        coordinates = []
+        for _ in vertices:
+            _x = random.random()
+            max_x = max(max_x, _x)
+            _y = random.random()
+            max_y = max(max_y, _y)
+            _z = random.random()
+            max_z = max(max_z, _z)
+            coordinates.append((_x, _y, _z))
 
         # vertices
-        return [(1, 0, 0), (0, 1, 0), (0, 0, 1), (2, 0.5, 0.5), (1.5, 0.5, 0.707)]
+        # return coordinates
+        return [(1, 0, 0), (0, 1, 0), (0, 0, 1), (0.75, 0.75, 0.75), (0.5, 1.0, 0.707)]
 
-    def draw_3d_simplex(self):
+    def draw_simplex3D(self, max_dim=None):
+        '''
+        Method to draw the simplicial complex using the simplex tree
 
+        Arguments:
+        max_dim : Max dimension upto which we should print the simplicial complex
+
+        '''
         vertices = self.__get_simplices(self.head, 0)
         coordinates = self.__get_coordinates(vertices)
 
         x2, y2, z2 = zip(*coordinates)
+        plt.clf()
         fig = plt.figure()
 
         ax = fig.gca(projection='3d')
 
         ax.set_xlabel('X')
-        ax.set_xlim3d(0, 2)
+        ax.set_xlim3d(0, 1.5)
         ax.set_ylabel('Y')
-        ax.set_ylim3d(0, 1)
+        ax.set_ylim3d(0, 1.5)
         ax.set_zlabel('Z')
-        ax.set_zlim3d(0, 1)
-        plt.title("Simplex Tree")
+        ax.set_zlim3d(0, 1.5)
+        plt.title("Simplicial Complex")
         ax.axis('off')
         ax.scatter(x2, y2, z2)
 
-        edges = self.__get_simplices(self.head, 1)
+        dim = min(self.getdimension(), 3)
 
-        poly3d_edges = [[coordinates[vert_id-1] for vert_id in face]
-                        for face in edges]
+        if max_dim is not None:
+            dim = min(self.getdimension(), min(3, max_dim))
 
-        edge_collection = Poly3DCollection(poly3d_edges, edgecolors='r', facecolor=[
-            0.0, 0.0, 1], linewidths=1, alpha=0.3)
-        ax.add_collection3d(edge_collection)
+        config = {0: {'edgecolors': 'r',
+                      'facecolor': [0.0, 0.0, 1],
+                      'linewidths': 1,
+                      'alpha': 0.3
+                      },
+                  1: {'edgecolors': 'r',
+                      'facecolor': [0.0, 0.0, 1],
+                      'linewidths': 1,
+                      'alpha': 1.0
+                      },
+                  2: {'edgecolors': 'black',
+                      'facecolor': [0.56, 0.875, 0.79],
+                      'linewidths': 1,
+                      'alpha': 0.3
+                      },
+                  3: {'edgecolors': 'black',
+                      'facecolor': [0.56, 0.875, 0.79],
+                      'linewidths': 1,
+                      'alpha': 1.0
+                      }, }
 
-        triangles = self.__get_simplices(self.head, 2)
-
-        poly3d_triangles = [[coordinates[vert_id-1] for vert_id in face]
-                            for face in triangles]
-
-        triangles_collection = Poly3DCollection(poly3d_triangles, edgecolors='b', facecolor=[
-            0.5, 0.5, 1], linewidths=1, alpha=0.3)
-        ax.add_collection3d(triangles_collection)
+        for _d in range(0, dim+1):
+            _simplices = self.__get_simplices(self.head, _d)
+            poly3d_edges = [[coordinates[vert_id-1] for vert_id in face]
+                            for face in _simplices]
+            edge_collection = Poly3DCollection(poly3d_edges, **config[_d])
+            ax.add_collection3d(edge_collection)
 
         plt.show()
 
     def draw_simplex(self):
+        '''
+        Legacy method to draw the simplicial complex (Supports only 2D)
+        '''
+        print("Method is deprecated. Please use draw_simplex3D(dim=0)")
+        return
         vertices = self.__get_simplices(self.head, 0)
         edges = self.__get_tuple(self.__get_simplices(self.head, 1), 2)
         triangles = self.__get_tuple(self.__get_simplices(self.head, 2), 3)
@@ -329,6 +386,56 @@ class SimplexTree:
         if found_simplex is None:
             return
         return found_simplex.filtration_value
+
+    def getdimension(self):
+        '''
+        dimension of simplicial complex= max_dimension of any simplex
+        Arguments:
+        '''
+        vertices = self.get_vertices()
+        dim = -1
+        for i in range(len(vertices)+1):
+            simplices = self.__get_simplices(self.head, i, [])
+            if simplices:
+                dim = dim+1
+            else:
+                return dim
+
+    def num_vertices(self):
+        vertices = self.get_vertices()
+        if vertices:
+            return len(vertices)
+        return 0
+
+    def num_simplices(self):
+        '''
+        returns the number of simplices in simplicial complex
+        '''
+        count = 0
+        vertices = self.get_vertices()
+        if vertices:
+            count = count+len(vertices)
+            for i in range(1, len(vertices)):
+                simplices = self.__get_simplices(self.head, i, [])
+                if simplices:
+                    count = count+len(simplices)
+                else:
+                    break
+        return count
+
+    def get_skeleton(self, dim):
+        vertices = self.get_vertices()
+        if vertices:
+            if(dim == 0):
+                return vertices
+            for i in range(1, dim+1):
+                simplices = self.__get_simplices(self.head, i, [])
+                if simplices:
+                    vertices = vertices+simplices
+                else:
+                    # return vertices
+                    break
+            return vertices
 
     def __print_siblings(self, node, prefix=""):
         '''
