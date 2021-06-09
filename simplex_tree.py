@@ -270,51 +270,48 @@ class SimplexTree:
         '''
         dimension of simplicial complex= max_dimension of any simplex 
         Arguments:
-        
+
         '''
         vertices = self.get_vertices()
-        dim=-1
+        dim = -1
         for i in range(len(vertices)+1):
-            simplices= self.__get_simplices(self.head,i,[])
+            simplices = self.__get_simplices(self.head, i, [])
             if simplices:
-                dim=dim+1
+                dim = dim+1
             else:
                 return dim
 
-    
     def num_vertices(self):
         vertices = self.get_vertices()
         if vertices:
             return len(vertices)
         return 0
-       
-
 
     def _num_simplices(self):
         '''
         returns the number of simplices in simplicial complex
         '''
-        count=0
+        count = 0
         vertices = self.get_vertices()
-        if vertices: 
-            count=count+len(vertices)
-            for i in range (1,len(vertices)):
-                simplices= self.__get_simplices(self.head,i,[])
+        if vertices:
+            count = count+len(vertices)
+            for i in range(1, len(vertices)):
+                simplices = self.__get_simplices(self.head, i, [])
                 if simplices:
-                    count=count+len(simplices)
+                    count = count+len(simplices)
                 else:
                     break
         return count
 
-    def get_skeleton(self,dim):
+    def get_skeleton(self, dim):
         vertices = self.get_vertices()
-        if vertices: 
-            if(dim==0):
-                return vertices 
-            for i in range (1,dim+1):
-                simplices= self.__get_simplices(self.head,i,[])
+        if vertices:
+            if(dim == 0):
+                return vertices
+            for i in range(1, dim+1):
+                simplices = self.__get_simplices(self.head, i, [])
                 if simplices:
-                    vertices=vertices+simplices
+                    vertices = vertices+simplices
                 else:
                     # return vertices
                     break
