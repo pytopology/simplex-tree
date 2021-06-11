@@ -246,7 +246,7 @@ class SimplexTree:
 
         if node is None:
             return
-        temp = node
+        temp = node1
         while(temp is not None):
             self.print_child(temp, "")
             temp = temp.next
@@ -265,3 +265,78 @@ class SimplexTree:
     def print_tree(self, node=None):
         node = self.head
         self.print_siblings(node.child)
+
+    def link(self, x):
+        a = self.head
+        ans = []
+        a = a.child
+        while(a != None):
+            if(a.name == x):
+                c = a.child
+                while(c != None):
+                    ans.append(c.name)
+                    c = c.next
+                break
+            else:
+                c = a.child
+                while(c != None):
+                    if(c.name == x):
+                        ans.append(a.name)
+                        break
+                    c = c.next
+            a = a.next
+        final_list = []
+        for i in range(len(ans)):
+            lis = list(map(list, itertools.combinations(ans, i+1)))
+            for j in lis:
+                if(self.__find(j) != None):
+                    final_list.append(j)
+        return final_list
+
+    def delete(self, list_simplex):
+        a = self.head
+        self.del_rec(a, list_simplex)
+
+    def del_rec(self, a, list_simplex):
+        if(a == None):
+            return;
+        if(len(list_simplex) == 1):
+            if(a.child != None):
+                if (a.child.name == list_simplex[0]):
+                    a.child = a.child.next
+                else:
+                    self.del_rec(a.next, list_simplex)
+            if(a.next != None):
+                if (a.next.name == list_simplex[0]):
+                    a.next = a.next.next
+                else:
+                    self.del_rec(a.child, list_simplex)
+        else:
+            if(a.child != None):
+                if (a.child.name == list_simplex[0]):
+                    self.del_child_only(a.child, list_simplex[1:])
+                else:
+                    self.del_rec(a.child, list_simplex)
+            if(a.next != None):
+                if (a.next.name == list_simplex[0]):
+                    self.del_child_only(a.next, list_simplex[1:])
+                else:
+                    self.del_rec(a.next, list_simplex)
+
+
+    def del_child_only(self, a, list_simplex):
+        if(a == None):
+            return
+        if(len(list_simplex) == 1):
+            if(a.child.name == list_simplex[0]):
+                a.child = a.child.next
+            else:
+                self.del_rec(a.child, list_simplex)
+        else:
+            if(a.child.name == list_simplex[0]):
+                self.del_child_only(a.child, list_simplex[1:])
+            else:
+                self.del_rec(a.child, list_simplex)
+
+
+
