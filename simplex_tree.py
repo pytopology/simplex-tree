@@ -104,7 +104,7 @@ class SimplexTree:
     def __findsubsets(self, simplex, length):
         return list(itertools.combinations(simplex, length))
 
-    def compute_boundaries(self, simplex):
+    def compute_boundaries(self, simplex, return_list=False):
         '''
         Compute the Boundary operator
 
@@ -113,6 +113,8 @@ class SimplexTree:
         '''
         found_simplex = self.__find(simplex)
         if found_simplex:
+            if return_list:
+                return [list(t) for t in self.__findsubsets(simplex, len(simplex)-1)]
             return self.__findsubsets(simplex, len(simplex)-1)
         return None
 
@@ -122,9 +124,19 @@ class SimplexTree:
         found_simplex = self.__find(simplex)
         if found_simplex is not None:
             # print("Simplex:", found_simplex, "is already present")
-            # TODO : Add new function to update the filtration value
-            if found_simplex.filtration_value != 0.0:
-                found_simplex.filtration_value = filtration
+            sub_simplices = self.compute_boundaries(simplex, True)
+            print(sub_simplices)
+            if sub_simplices is not None:
+                if len(self.__find(sub_simplices[0]).simplex_name) > 1:
+                    max_filt = max(
+                        [self.__find(ss).filtration_value for ss in sub_simplices])
+                    max_simplices = [
+                        ss for ss in sub_simplices if self.__find(ss).filtration_value == max_filt]
+                    for _ss in max_simplices:
+                        self.update_filtration(_ss, filtration)
+                        # TODO : Add new function to update the filtration value
+            # if found_simplex.filtration_value != 0.0:
+            #     found_simplex.filtration_value = filtration
 
     def insert(self, _simplex, filtration=0.0):
         '''
@@ -228,21 +240,6 @@ class SimplexTree:
         print("outputs :", outputs)
         return outputs
 
-    def __get_tuple(self, simplices, dim):
-        '''
-        Internal Method used to convert the list of simplices array 
-        into a tuple. For e.g [[1,2,3]] => [(1,2,3)]
-
-        Arguments:
-        simplices : list of simplices which needs to be converted into tuple
-        dim : Dimension of the input simplex
-
-        '''
-        output = []
-        for e in filter(lambda x: len(x) == dim, simplices):
-            output.append(tuple(e))
-        return output
-
     def __get_coordinates(self, vertices):
         '''
         Internal method used to generate the random coordinates for the vertices
@@ -266,7 +263,17 @@ class SimplexTree:
 
         # vertices
         # return coordinates
-        return [(1, 0, 0), (0, 1, 0), (0, 0, 1), (0.75, 0.75, 0.75), (0.5, 1.0, 0.707)]
+        return [(-0.75, 0.25, 0),  # 1
+                (-0.25, 0, 0),  # 2
+                (-0.5, 0.5, -0.5),  # 3
+                (-0.125, 1, 0),  # 4
+                (-0.125, 0.125, -0.75),  # 5
+                (0.5, 0.5, 0),  # 6
+                (1, 0, 0),  # 7
+                (1, 0.75, 0),  # 8
+                (0, 0, 0),  # 9
+                (0.5, 0.75, 0)  # 10
+                ]
 
     def draw_simplex3D(self, max_dim=None):
         '''
@@ -280,18 +287,17 @@ class SimplexTree:
         coordinates = self.__get_coordinates(vertices)
 
         x2, y2, z2 = zip(*coordinates)
-        plt.clf()
-        fig = plt.figure()
+        # plt.clf()
+        fig = plt.figure(figsize=(4, 4))
 
         ax = fig.gca(projection='3d')
 
         ax.set_xlabel('X')
-        ax.set_xlim3d(0, 1.5)
+        ax.set_xlim3d(-0.75, 1.5)
         ax.set_ylabel('Y')
-        ax.set_ylim3d(0, 1.5)
+        ax.set_ylim3d(-0.75, 1.5)
         ax.set_zlabel('Z')
-        ax.set_zlim3d(0, 1.5)
-        plt.title("Simplicial Complex")
+        ax.set_zlim3d(-0.75, 1.5)
         ax.axis('off')
         ax.scatter(x2, y2, z2)
 
@@ -300,12 +306,14 @@ class SimplexTree:
         if max_dim is not None:
             dim = min(self.getdimension(), min(3, max_dim))
 
+        plt.title("Simplicial Complex Upto Dim: {}".format(dim))
+
         config = {0: {'edgecolors': 'r',
                       'facecolor': [0.0, 0.0, 1],
                       'linewidths': 1,
                       'alpha': 0.3
                       },
-                  1: {'edgecolors': 'r',
+                  1: {'edgecolors': 'black',
                       'facecolor': [0.0, 0.0, 1],
                       'linewidths': 1,
                       'alpha': 1.0
@@ -316,7 +324,7 @@ class SimplexTree:
                       'alpha': 0.3
                       },
                   3: {'edgecolors': 'black',
-                      'facecolor': [0.56, 0.875, 0.79],
+                      'facecolor': [0.56, 1, 0.79],
                       'linewidths': 1,
                       'alpha': 1.0
                       }, }
@@ -330,53 +338,8 @@ class SimplexTree:
 
         plt.show()
 
-    def draw_simplex(self):
-        '''
-        Legacy method to draw the simplicial complex (Supports only 2D)
-        '''
-        print("Method is deprecated. Please use draw_simplex3D(dim=0)")
-        return
-        vertices = self.__get_simplices(self.head, 0)
-        edges = self.__get_tuple(self.__get_simplices(self.head, 1), 2)
-        triangles = self.__get_tuple(self.__get_simplices(self.head, 2), 3)
-        print(edges)
-        plt.figure(figsize=(8, 8))
-        plt.title("Simplex Tree")
-        ax = plt.subplot(111)
-        ax = plt.gca(projection='3d')
-        ax.set_xlim([-1.1, 1.1])
-        ax.set_ylim([-1.1, 1.1])
-        ax.set_zlim([-1.1, 1.1])
-        ax.get_xaxis().set_ticks([])
-        ax.get_yaxis().set_ticks([])
-        ax.axis('off')
-        G = nx.Graph()
-        G.add_edges_from(edges)
-        # Creating a dictionary for the position of the nodes
-        pos = nx.spring_layout(G)
-        for x, y in edges:
-            (x0, y0) = pos[x]
-            (x1, y1) = pos[y]
-            line = plt.Line2D([x0, x1], [y0, y1],
-                              color='black', zorder=1, lw=0.7)
-            ax.add_line(line)
-
-        for x, y, z in triangles:
-            (x0, y0) = pos[x]
-            (x1, y1) = pos[y]
-            (x2, y2) = pos[z]
-            tri = plt.Polygon([[x0, y0], [x1, y1], [x2, y2]],
-                              edgecolor='black', facecolor=plt.cm.Blues(0.6),
-                              zorder=2, alpha=0.4, lw=0.5)
-            ax.add_patch(tri)
-        for i in vertices:
-            (x, y) = pos[i[0]]
-            circ = plt.Circle([x, y], radius=0.02, zorder=3, lw=0.5,
-                              edgecolor='Black', facecolor=u'#ff7f0e')
-            ax.add_patch(circ)
-
-        plt.plot()
-        plt.show()
+    def draw_simplex(self, max_dim):
+        self.draw_simplex3D(max_dim)
 
     def delete(self):
         pass
@@ -460,7 +423,7 @@ class SimplexTree:
         if node is None:
             return
         prefix = prefix + str(node.name)+","
-        print("Simplex: {} Filtration value :{}".format(
+        print("Simplex: {} Filtration value : {}".format(
             node.simplex_name, node.filtration_value))
         self.__print_siblings(node.child)
 

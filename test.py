@@ -159,6 +159,18 @@ class TestSimplex(unittest.TestCase):
 
         self.assertEqual(expected, actual)
 
+    def test_14(self):
+        '''
+        filtration
+        '''
+        sim = SimplexTree()
+        sim.insert([1, 2], 1.0)
+        sim.insert([3, 4], 2.0)
+
+        sim.print_tree()
+        sim.update_filtration([3, 4], 4.0)
+        sim.print_tree()
+
 
 if __name__ == '__main__':
     unittest.main()
