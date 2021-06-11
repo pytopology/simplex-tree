@@ -17,8 +17,18 @@ pip install pytopology
 from pytopology import SimplexTree
 
 simp = SimplexTree()
-simp.insert([1,2,3,4])
+simp.insert([1,2,3],4.)
 simp.printTree()
+```
+**Output**
+```
+Simplex: [1] Filtration value : 2.0
+Simplex: [1, 2] Filtration value : 3.0
+Simplex: [1, 2, 3] Filtration value : 4.0
+Simplex: [1, 3] Filtration value : 4.0
+Simplex: [2] Filtration value : 3.0
+Simplex: [2, 3] Filtration value : 4.0
+Simplex: [3] Filtration value : 4.0
 ```
 
 ### Visualizing the Simplex 
@@ -26,9 +36,18 @@ simp.printTree()
 from pytopology import SimplexTree
 
 simp = SimplexTree()
-simp.insert([1,2,3,4])
+sim.insert([1, 2, 3])
+sim.insert([2, 3, 4, 5])
+sim.insert([6, 7, 9])
+sim.insert([7, 8])
+sim.insert([10])
 simp.draw_simplex3D()
 ```
+![image](https://github.com/pytopology/simplex-tree/blob/main/dim3.gif)
+![image](https://github.com/pytopology/simplex-tree/blob/main/dim2.gif)
+![image](https://github.com/pytopology/simplex-tree/blob/main/dim1.gif)
+![image](https://github.com/pytopology/simplex-tree/blob/main/dim0.gif)
+
 ## Operations on Simplicial Complex
 - Insert
 - Find
