@@ -378,7 +378,18 @@ class SimplexTree:
         plt.plot()
         plt.show()
 
-    def delete(self):
+    def delete(self, simplex):
+        # mini=min(simplex.name)
+        # length=len(simplex.name)
+        # count=0
+        # temp=head.child
+        # while(temp.name[0]<=mini):
+        #     if(temp.name[0]==mini):
+        #         count=count+1
+            
+       
+            
+
         pass
 
     def filtration(self, simplex):
@@ -467,3 +478,42 @@ class SimplexTree:
     def print_tree(self, node=None):
         node = self.head
         self.__print_siblings(node.child)
+
+    def coface(self, simplex):
+        if self.head is None:
+            return None
+        # temp=simplex
+        # lst=list()
+        # while(temp != None):
+        #     temp1=temp.child
+        #     temp2=temp1
+        #     while(temp2!=None):
+        #         lst.append(temp2.simplex_name)
+        #         temp2=temp2.sibling
+        lst=list()
+        vertices = self.num_vertices()
+        simplices=list()
+        for i in range(vertices):
+            sim = self.__get_simplices(self.head,i,[])
+            simplices=simplices+sim
+
+        
+        for i in range (len(simplices)):
+            if(set(simplex).intersection(set(simplices[i])) == set(simplex)):
+                lst.append(simplices[i])
+        # lst=lst.remove(simplex)
+        return lst
+
+    def star(self, vertex):
+        if len(vertex)==1:
+            star_vertex=self.coface(vertex)
+            return star_vertex
+            
+        return 
+    # def lower_star(self, vertex):
+    #     star_v = self.star(vertex)
+    #     lst=list()
+    #     for i in range(len(star_v)):
+    #         if (vertex.filtration_value >= star_v[i].filtration_value):
+    #             lst.append(star_v[i])
+    #     return lst
