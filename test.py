@@ -164,11 +164,27 @@ class TestSimplex(unittest.TestCase):
         filtration
         '''
         sim = SimplexTree()
-        sim.insert([1, 2], 1.0)
-        sim.insert([3, 4], 2.0)
+        sim.insert([1, 2, 3])
+        #sim.insert([3, 4], 2.0)
+
+        sim.update_filtration([1, 2, 3], 4.0)
+        actual = sim.filtration([3, 2])
+        #sim.update_filtration([1, 2, 3])
+        self.assertEqual(4.0, actual)
+
+    def test_15(self):
+        '''
+        filtration
+        '''
+        sim = SimplexTree()
+        sim.insert([1, 2, 3])
+        #sim.insert([3, 4], 2.0)
 
         sim.print_tree()
-        sim.update_filtration([3, 4], 4.0)
+
+        sim.update_filtration([1, 2], 6.0)
+
+        #sim.update_filtration([1, 2, 3])
         sim.print_tree()
 
 

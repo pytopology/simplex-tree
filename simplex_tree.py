@@ -1,7 +1,6 @@
 from node import Node
 import itertools
 import matplotlib.pyplot as plt
-import networkx as nx
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import random
 
@@ -10,6 +9,10 @@ class SimplexTree:
     def __init__(self):
         self.head = None
         print("Created Simplex Tree")
+
+    def __get_random_filtration(self):
+        filt = [1.0, 2.0, 3.0, 4.0]
+        return random.choice(filt)
 
     def __get_simplex_name(self, simplex_prefix, simplex_name):
         '''
@@ -49,9 +52,18 @@ class SimplexTree:
                 parent_simplex_name, node_name)  # parent_simplex_name = [] , 2 => [2] | [],3 => [3]
             # print("Inserting : ", node_name, "Parent Simplex name :",
             #       parent_simplex_name, "Simplex Name :", simplex_name)
-            new_node = self.__find(simplex_name)  # [2] | [3]
+            new_node = self.__find(simplex_name)  # [2] | [3] # [2,3,4]
             if new_node is None:
-                new_node = Node(node_name, simplex_name, filtration)
+                if len(simplex_name) == 2:
+                    new_node = Node(node_name, simplex_name,
+                                    self.__get_random_filtration())
+                elif len(simplex_name) == 1:
+                    new_node = Node(node_name, simplex_name, 0.0)
+
+                else:
+                    #__filtration = self.get_max_child_filtration(simplex_name)
+                    new_node = Node(node_name, simplex_name, filtration)
+
                 self.__insert_child(new_node, simplex_name,
                                     siblings[i+1:], filtration)
                 new_node.next = temp.next
@@ -82,8 +94,14 @@ class SimplexTree:
         node = self.__find(simplex_name)  # [1] | [1, 2] | [1 ,2 ,3]
         node_exist = node is not None
         if not node_exist:
+            if len(simplex_name) == 2:
+                node = Node(node_name, simplex_name,
+                            self.__get_random_filtration())
+            elif len(simplex_name) == 1:
+                node = Node(node_name, simplex_name, 0.0)
+            else:
+                node = Node(node_name, simplex_name, filtration)
             # node [1] | [1, 2] | [1,2,3]
-            node = Node(node_name, simplex_name, filtration)
         self.__insert_child(node, simplex_name,
                             children[1:], filtration)  # [2, 3] | [3] | []
         self.__insert_sibling(
@@ -118,25 +136,50 @@ class SimplexTree:
             return self.__findsubsets(simplex, len(simplex)-1)
         return None
 
+    def get_max_child_filtration(self, simplex):
+        sub_simplices = self.compute_boundaries(simplex, True)
+        max_filt = max(
+            [self.__find(ss).filtration_value for ss in sub_simplices])
+        return max_filt
+
+    def balance_filtrations(self):
+        i = 2
+        simplices = self.__get_simplices(self.head, i, [])
+        # print(simplices)
+        while(len(simplices) > 0):
+            for _ss in simplices:
+                _f = self.get_max_child_filtration(_ss)
+                self.__find(_ss).filtration_value = _f
+            i = i+1
+            simplices = self.__get_simplices(self.head, i, [])
+
     def update_filtration(self, _simplex, filtration):
+        self.__update_filtration(_simplex, filtration)
+        self.balance_filtrations()
+
+    def __update_filtration(self, _simplex, filtration):
         simplex = _simplex
         simplex.sort()
         found_simplex = self.__find(simplex)
         if found_simplex is not None:
             # print("Simplex:", found_simplex, "is already present")
             sub_simplices = self.compute_boundaries(simplex, True)
-            print(sub_simplices)
+            # print(sub_simplices)
             if sub_simplices is not None:
                 if len(self.__find(sub_simplices[0]).simplex_name) > 1:
                     max_filt = max(
                         [self.__find(ss).filtration_value for ss in sub_simplices])
                     max_simplices = [
-                        ss for ss in sub_simplices if self.__find(ss).filtration_value == max_filt]
+                        ss for ss in sub_simplices if self.__find(ss).simplex_name[len(simplex)-2] == simplex[len(simplex)-1]]
                     for _ss in max_simplices:
                         self.update_filtration(_ss, filtration)
-                        # TODO : Add new function to update the filtration value
-            # if found_simplex.filtration_value != 0.0:
-            #     found_simplex.filtration_value = filtration
+                    if max_filt > filtration:
+                        other_simplices = [
+                            ss for ss in sub_simplices if self.__find(ss).filtration_value == max_filt]
+                        for _ss in other_simplices:
+                            self.update_filtration(_ss, filtration)
+
+            found_simplex.filtration_value = filtration
 
     def insert(self, _simplex, filtration=0.0):
         '''
@@ -160,6 +203,7 @@ class SimplexTree:
         else:
             node = self.head.child
             self.__insert_sibling(node, simplex, [], filtration)
+        self.balance_filtrations()
 
     def find_simplex(self, simplex):
         '''
@@ -205,21 +249,15 @@ class SimplexTree:
             # No simplices available for the given dimension
             return []
         if dim == -1:
-            temp = node  # [1]
+            temp = node
             while temp is not None:
-                # print(temp.simplex_name)
-                # output : [[1]] | [[1] , [2]] | [[1], [2], [3]]
                 output.append(temp.simplex_name)
                 temp = temp.next
             return output
-        temp_next = node  # head
+        temp_next = node
         while (temp_next is not None):
-            # print("searching children of {}".format(temp_next.simplex_name))
-            # [[1], [2], [3]] # append [[[1],[2],[3]]]
             output.extend(self.__get_simplices(temp_next.child, dim-1, []))
-            # print(output)
             temp_next = temp_next.next
-        # print(output)
         return output
 
     def get_vertices(self):
@@ -227,7 +265,6 @@ class SimplexTree:
         Get Vertices i.e Simplices of 0 dimensions
         '''
         outputs = self.__get_simplices(self.head, 0, [])
-        print("Vertices :", outputs)
         return outputs
 
     def get_simplices(self, dim=0):
@@ -237,7 +274,6 @@ class SimplexTree:
         if self.head is None:
             return
         outputs = self.__get_simplices(self.head, dim)
-        print("outputs :", outputs)
         return outputs
 
     def __get_coordinates(self, vertices):
@@ -344,7 +380,9 @@ class SimplexTree:
     def delete(self):
         pass
 
-    def filtration(self, simplex):
+    def filtration(self, _simplex):
+        simplex = _simplex
+        simplex.sort()
         found_simplex = self.__find(simplex)
         if found_simplex is None:
             return
