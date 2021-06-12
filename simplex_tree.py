@@ -378,7 +378,7 @@ class SimplexTree:
         plt.plot()
         plt.show()
 
-    def delete(self, simplex):
+    def delete(self):
         pass
 
     def filtration(self, simplex):
