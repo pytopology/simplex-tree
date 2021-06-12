@@ -110,6 +110,63 @@ class TestSimplex(unittest.TestCase):
 
     def test_10(self):
         '''
+        Get Vertices
+        '''
+        sim = SimplexTree()
+
+        sim.insert([1, 2, 3, 4], 0.0)
+
+        # sim.print_tree()
+        sim.delete([2, 4])
+        actual = sim.find_simplex([2, 4])
+        actual1 = sim.find_simplex([3, 4])
+        actual2 = sim.find_simplex([2, 3, 4])
+        actual3 = sim.find_simplex([1, 2, 3, 4])
+        expected = None
+        print(actual)
+        self.assertEqual(expected, actual)
+        self.assertNotEqual(expected, actual1)
+        self.assertEqual(expected, actual2)
+        self.assertEqual(expected, actual3)
+
+    def test_11(self):
+        '''
+        Get Vertices
+        '''
+        sim = SimplexTree()
+
+        sim.insert([1, 2, 3, 4], 0.0)
+
+        # sim.print_tree()
+        sim.delete([1, 2, 4])
+        actual = sim.find_simplex([2, 4])
+        actual1 = sim.find_simplex([3, 4])
+        actual2 = sim.find_simplex([1, 2, 4])
+        actual3 = sim.find_simplex([1, 2, 3, 4])
+        expected = None
+        # print(actual)
+        self.assertNotEqual(expected, actual)
+        self.assertNotEqual(expected, actual1)
+        self.assertEqual(expected, actual2)
+        self.assertEqual(expected, actual3)
+
+    def test_12(self):
+        '''
+        Get Vertices
+        '''
+        sim = SimplexTree()
+
+        sim.insert([1, 2, 3, 4], 0.0)
+        sim.insert([5, 6, 7], 0.0)
+
+        # sim.print_tree()
+        ans = sim.link(7)
+        expected = [[5], [6], [5, 6]]
+        # print(actual)
+        self.assertEqual(expected, ans)
+
+    def test_13(self):
+        '''
         Get dimension
         '''
         sim = SimplexTree()
@@ -120,7 +177,7 @@ class TestSimplex(unittest.TestCase):
 
         self.assertEqual(expected, actual)
 
-    def test_11(self):
+    def test_14(self):
         '''
         Get num of vertices
         '''
@@ -132,7 +189,7 @@ class TestSimplex(unittest.TestCase):
 
         self.assertEqual(expected, actual)
 
-    def test_12(self):
+    def test_15(self):
         '''
         num of simplices
         '''
@@ -144,7 +201,7 @@ class TestSimplex(unittest.TestCase):
 
         self.assertEqual(expected, actual)
 
-    def test_13(self):
+    def test_16(self):
         '''
         skeleton
         '''
@@ -157,7 +214,7 @@ class TestSimplex(unittest.TestCase):
 
         self.assertEqual(expected, actual)
 
-    def test_14(self):
+    def test_17(self):
         '''
         coface
         '''
@@ -169,7 +226,7 @@ class TestSimplex(unittest.TestCase):
 
         self.assertEqual(expected, actual)
 
-    def test_15(self):
+    def test_18(self):
         '''
         star
         '''
