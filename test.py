@@ -239,6 +239,34 @@ class TestSimplex(unittest.TestCase):
 
         self.assertEqual(expected, actual)
 
+    def test_19(self):
+        '''
+        filtration
+        '''
+        sim = SimplexTree()
+        sim.insert([1, 2, 3])
+        #sim.insert([3, 4], 2.0)
+
+        sim.update_filtration([1, 2, 3], 4.0)
+        actual = sim.filtration([3, 2])
+        #sim.update_filtration([1, 2, 3])
+        self.assertEqual(4.0, actual)
+
+    def test_20(self):
+        '''
+        filtration
+        '''
+        sim = SimplexTree()
+        sim.insert([1, 2, 3])
+        #sim.insert([3, 4], 2.0)
+
+        sim.print_tree()
+
+        sim.update_filtration([1, 2], 6.0)
+
+        #sim.update_filtration([1, 2, 3])
+        sim.print_tree()
+
     # def test_16(self):
     #     '''
     #     lower star
