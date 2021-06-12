@@ -60,8 +60,6 @@ simp.draw_simplex3D()
 - CoFace, Star, Link 
 
 ## Contributors
-Ashish Kankal 
-
-Karan Gupta
-
-Vivek A
+- Ashish Kankal ([@ashishkankal](https://github.com/ashishkankal))
+- Karan Gupta([@karan25gupta](https://github.com/karan25gupta))
+- Vivek A([@vivek1kerala7](https://github.com/vivek1kerala7))
