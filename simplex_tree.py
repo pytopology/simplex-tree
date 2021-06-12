@@ -467,4 +467,105 @@ class SimplexTree:
 
     def print_tree(self, node=None):
         node = self.head
-        self.__print_siblings(node.child)
+        self.print_siblings(node.child)
+
+    def link(self, x):
+        a = self.head
+        ans = []
+        a = a.child
+        while(a != None):
+            if(a.name == x):
+                c = a.child
+                while(c != None):
+                    ans.append(c.name)
+                    c = c.next
+                break
+            else:
+                c = a.child
+                while(c != None):
+                    if(c.name == x):
+                        ans.append(a.name)
+                        break
+                    c = c.next
+            a = a.next
+        final_list = []
+        for i in range(len(ans)):
+            lis = list(map(list, itertools.combinations(ans, i+1)))
+            for j in lis:
+                if(self.__find(j) != None):
+                    final_list.append(j)
+        return final_list
+
+    def delete(self, list_simplex):
+        a = self.head
+        self.del_rec(a, list_simplex)
+
+    def del_rec(self, a, list_simplex):
+        if(a == None):
+            return
+        if(len(list_simplex) == 1):
+            if(a.child != None):
+                if (a.child.name == list_simplex[0]):
+                    a.child = a.child.next
+                else:
+                    self.del_rec(a.next, list_simplex)
+            if(a.next != None):
+                if (a.next.name == list_simplex[0]):
+                    a.next = a.next.next
+                else:
+                    self.del_rec(a.child, list_simplex)
+        else:
+            if(a.child != None):
+                if (a.child.name == list_simplex[0]):
+                    self.del_child_only(a.child, list_simplex[1:])
+                else:
+                    self.del_rec(a.child, list_simplex)
+            if(a.next != None):
+                if (a.next.name == list_simplex[0]):
+                    self.del_child_only(a.next, list_simplex[1:])
+                else:
+                    self.del_rec(a.next, list_simplex)
+
+    def del_child_only(self, a, list_simplex):
+        if(a == None):
+            return
+        if(len(list_simplex) == 1):
+            if(a.child.name == list_simplex[0]):
+                a.child = a.child.next
+            else:
+                self.del_rec(a.child, list_simplex)
+        else:
+            if(a.child.name == list_simplex[0]):
+                self.del_child_only(a.child, list_simplex[1:])
+            else:
+                self.del_rec(a.child, list_simplex)
+
+    def coface(self, simplex):
+        if self.head is None:
+            return None
+        lst = list()
+        vertices = self.num_vertices()
+        simplices = list()
+        for i in range(vertices):
+            sim = self.__get_simplices(self.head, i, [])
+            simplices = simplices+sim
+
+        for i in range(len(simplices)):
+            if(set(simplex).intersection(set(simplices[i])) == set(simplex)):
+                lst.append(simplices[i])
+        # lst=lst.remove(simplex)
+        return lst
+
+    def star(self, vertex):
+        if len(vertex) == 1:
+            star_vertex = self.coface(vertex)
+            return star_vertex
+
+        return
+    # def lower_star(self, vertex):
+    #     star_v = self.star(vertex)
+    #     lst=list()
+    #     for i in range(len(star_v)):
+    #         if (vertex.filtration_value >= star_v[i].filtration_value):
+    #             lst.append(star_v[i])
+    #     return lst
