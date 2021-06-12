@@ -50,8 +50,6 @@ class SimplexTree:
 
             simplex_name = self.__get_simplex_name(
                 parent_simplex_name, node_name)  # parent_simplex_name = [] , 2 => [2] | [],3 => [3]
-            # print("Inserting : ", node_name, "Parent Simplex name :",
-            #       parent_simplex_name, "Simplex Name :", simplex_name)
             new_node = self.__find(simplex_name)  # [2] | [3] # [2,3,4]
             if new_node is None:
                 if len(simplex_name) == 2:
@@ -61,7 +59,6 @@ class SimplexTree:
                     new_node = Node(node_name, simplex_name, 0.0)
 
                 else:
-                    #__filtration = self.get_max_child_filtration(simplex_name)
                     new_node = Node(node_name, simplex_name, filtration)
 
                 self.__insert_child(new_node, simplex_name,
@@ -70,7 +67,6 @@ class SimplexTree:
                 temp.next = new_node  # [1].next = [2] | [2].next = [3]
                 temp = new_node  # temp [2] | temp [3]
             else:
-                # print("Simplex :{} already exists".format(simplex_name))
                 self.__insert_child(new_node, simplex_name,
                                     siblings[i+1:], filtration)  # new_node: [2] simplex_name: [2] siblings [3]
 
@@ -145,7 +141,7 @@ class SimplexTree:
     def balance_filtrations(self):
         i = 2
         simplices = self.__get_simplices(self.head, i, [])
-        # print(simplices)
+
         while(len(simplices) > 0):
             for _ss in simplices:
                 _f = self.get_max_child_filtration(_ss)
@@ -162,9 +158,9 @@ class SimplexTree:
         simplex.sort()
         found_simplex = self.__find(simplex)
         if found_simplex is not None:
-            # print("Simplex:", found_simplex, "is already present")
+
             sub_simplices = self.compute_boundaries(simplex, True)
-            # print(sub_simplices)
+
             if sub_simplices is not None:
                 if len(self.__find(sub_simplices[0]).simplex_name) > 1:
                     max_filt = max(
@@ -193,7 +189,6 @@ class SimplexTree:
         simplex.sort()
         found_simplex = self.__find(simplex)
         if found_simplex is not None:
-            # print("Simplex:", found_simplex, "is already present")
             return
         if self.head is None:
             # Create a root node
@@ -323,7 +318,7 @@ class SimplexTree:
         coordinates = self.__get_coordinates(vertices)
 
         x2, y2, z2 = zip(*coordinates)
-        # plt.clf()
+
         fig = plt.figure(figsize=(4, 4))
 
         ax = fig.gca(projection='3d')
@@ -467,7 +462,7 @@ class SimplexTree:
 
     def print_tree(self, node=None):
         node = self.head
-        self.print_siblings(node.child)
+        self.__print_siblings(node.child)
 
     def link(self, x):
         a = self.head
