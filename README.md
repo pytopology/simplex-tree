@@ -50,22 +50,14 @@ simp.draw_simplex3D()
 
 ## Operations on Simplicial Complex
 - Insert
-- Find
+- Find (Query)
 - Boundary
 - Print
-- Get Filtration
+- Filtration (with recursive propagation)
 - Visualization 
-- Insert modifications (sorted order)
 - Get Dimension
 - NumVertices, NumSimplices, Skeleton
-
-## WIP
-- Visualization (Generate random points properly)
-- Update filtration (recursively)
-## Pending 
-- Delete (***)
-- CoFace, Star(Lower star , Upper star), Closure, Link (Lower Link, Upper Link)
-- Persistance, Betti numbers (Optional)
+- CoFace, Star, Link 
 
 ## Contributors
 Ashish Kankal 
