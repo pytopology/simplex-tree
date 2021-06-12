@@ -1,5 +1,9 @@
 from node import Node
 import itertools
+import matplotlib.pyplot as plt
+import networkx as nx
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+import random
 
 
 class SimplexTree:
@@ -20,10 +24,10 @@ class SimplexTree:
         _simplex_prefix.append(simplex_name)
         return _simplex_prefix
 
-    def insert_sibling(self, node, siblings, parent_simplex_name, filtration):
+    def __insert_sibling(self, node, siblings, parent_simplex_name, filtration):
         '''
         Iterative Method to insert the sibling in horizontal direction.
-        This method also calls the insert_child() method to insert the
+        This method also calls the __insert_child() method to insert the
         children of the siblings.
 
         Arguments:-
@@ -34,13 +38,13 @@ class SimplexTree:
         if len(siblings) == 0 or siblings is None:
             return
         # print("Inserting siblings", siblings)
-        # TODO Mantain the sort order
         temp = node  # [1]
 
-        while(temp.next is not None):
-            temp = temp.next  # temp -> last node of the linked list
         for i in range(len(siblings)):  # [2,3] | [3] | []
             node_name = siblings[i]  # 2 | 3
+            while(temp.next is not None and temp.next.name < node_name):
+                temp = temp.next  # temp -> last node of the linked list
+
             simplex_name = self.__get_simplex_name(
                 parent_simplex_name, node_name)  # parent_simplex_name = [] , 2 => [2] | [],3 => [3]
             # print("Inserting : ", node_name, "Parent Simplex name :",
@@ -48,18 +52,19 @@ class SimplexTree:
             new_node = self.__find(simplex_name)  # [2] | [3]
             if new_node is None:
                 new_node = Node(node_name, simplex_name, filtration)
-                self.insert_child(new_node, simplex_name,
-                                  siblings[i+1:], filtration)
+                self.__insert_child(new_node, simplex_name,
+                                    siblings[i+1:], filtration)
+                new_node.next = temp.next
                 temp.next = new_node  # [1].next = [2] | [2].next = [3]
                 temp = new_node  # temp [2] | temp [3]
             else:
                 # print("Simplex :{} already exists".format(simplex_name))
-                self.insert_child(new_node, simplex_name,
-                                  siblings[i+1:], filtration)  # new_node: [2] simplex_name: [2] siblings [3]
+                self.__insert_child(new_node, simplex_name,
+                                    siblings[i+1:], filtration)  # new_node: [2] simplex_name: [2] siblings [3]
 
-    def insert_child(self, parent, simplex_prefix, children, filtration):
+    def __insert_child(self, parent, simplex_prefix, children, filtration):
         '''
-        Recursive method to insert the children also calls the insert_siblings()
+        Recursive method to insert the children also calls the __insert_siblings()
         method.
 
         Arguments:-
@@ -79,9 +84,9 @@ class SimplexTree:
         if not node_exist:
             # node [1] | [1, 2] | [1,2,3]
             node = Node(node_name, simplex_name, filtration)
-        self.insert_child(node, simplex_name,
-                          children[1:], filtration)  # [2, 3] | [3] | []
-        self.insert_sibling(
+        self.__insert_child(node, simplex_name,
+                            children[1:], filtration)  # [2, 3] | [3] | []
+        self.__insert_sibling(
             node, children[1:], simplex_prefix, filtration)  # node [1] simplex_prefix [] , children [2,3]
 
         # Node Children might not be enpty
@@ -96,16 +101,6 @@ class SimplexTree:
                     last_child_node = last_child_node.next
                 last_child_node.next = node
 
-        # Node Children might not be enpty
-        # Find the last node (TODO : Need to add appropriately to maintain order)
-        # last_child_node = parent.child
-        # if last_child_node is not None:
-        #   while (last_child_node.next is not None):
-        #     last_child_node = last_child_node.next
-
-        #   last_child_node.next = node
-        # else:
-        #   last_child_node = node
     def __findsubsets(self, simplex, length):
         return list(itertools.combinations(simplex, length))
 
@@ -121,6 +116,16 @@ class SimplexTree:
             return self.__findsubsets(simplex, len(simplex)-1)
         return None
 
+    def update_filtration(self, _simplex, filtration):
+        simplex = _simplex
+        simplex.sort()
+        found_simplex = self.__find(simplex)
+        if found_simplex is not None:
+            # print("Simplex:", found_simplex, "is already present")
+            # TODO : Add new function to update the filtration value
+            if found_simplex.filtration_value != 0.0:
+                found_simplex.filtration_value = filtration
+
     def insert(self, _simplex, filtration=0.0):
         '''
         Insert Method (API) to insert the simplex.
@@ -134,18 +139,15 @@ class SimplexTree:
         found_simplex = self.__find(simplex)
         if found_simplex is not None:
             # print("Simplex:", found_simplex, "is already present")
-            # TODO : Add new function to update the filtration value
-            if found_simplex.filtration_value != 0.0:
-                found_simplex.filtration_value = filtration
             return
         if self.head is None:
             # Create a root node
             node = Node("x", 0.0)
             self.head = node
-            self.insert_child(self.head, [], simplex, filtration)
+            self.__insert_child(self.head, [], simplex, filtration)
         else:
             node = self.head.child
-            self.insert_sibling(node, simplex, [], filtration)
+            self.__insert_sibling(node, simplex, [], filtration)
 
     def find_simplex(self, simplex):
         '''
@@ -226,16 +228,216 @@ class SimplexTree:
         print("outputs :", outputs)
         return outputs
 
+    def __get_tuple(self, simplices, dim):
+        '''
+        Internal Method used to convert the list of simplices array 
+        into a tuple. For e.g [[1,2,3]] => [(1,2,3)]
+
+        Arguments:
+        simplices : list of simplices which needs to be converted into tuple
+        dim : Dimension of the input simplex
+
+        '''
+        output = []
+        for e in filter(lambda x: len(x) == dim, simplices):
+            output.append(tuple(e))
+        return output
+
+    def __get_coordinates(self, vertices):
+        '''
+        Internal method used to generate the random coordinates for the vertices
+        of the simplicial complex
+
+        Arguments:
+        vertices : list of vertices
+        '''
+        max_x = 0
+        max_y = 0
+        max_z = 0
+        coordinates = []
+        for _ in vertices:
+            _x = random.random()
+            max_x = max(max_x, _x)
+            _y = random.random()
+            max_y = max(max_y, _y)
+            _z = random.random()
+            max_z = max(max_z, _z)
+            coordinates.append((_x, _y, _z))
+
+        # vertices
+        # return coordinates
+        return [(1, 0, 0), (0, 1, 0), (0, 0, 1), (0.75, 0.75, 0.75), (0.5, 1.0, 0.707)]
+
+    def draw_simplex3D(self, max_dim=None):
+        '''
+        Method to draw the simplicial complex using the simplex tree
+
+        Arguments:
+        max_dim : Max dimension upto which we should print the simplicial complex
+
+        '''
+        vertices = self.__get_simplices(self.head, 0)
+        coordinates = self.__get_coordinates(vertices)
+
+        x2, y2, z2 = zip(*coordinates)
+        plt.clf()
+        fig = plt.figure()
+
+        ax = fig.gca(projection='3d')
+
+        ax.set_xlabel('X')
+        ax.set_xlim3d(0, 1.5)
+        ax.set_ylabel('Y')
+        ax.set_ylim3d(0, 1.5)
+        ax.set_zlabel('Z')
+        ax.set_zlim3d(0, 1.5)
+        plt.title("Simplicial Complex")
+        ax.axis('off')
+        ax.scatter(x2, y2, z2)
+
+        dim = min(self.getdimension(), 3)
+
+        if max_dim is not None:
+            dim = min(self.getdimension(), min(3, max_dim))
+
+        config = {0: {'edgecolors': 'r',
+                      'facecolor': [0.0, 0.0, 1],
+                      'linewidths': 1,
+                      'alpha': 0.3
+                      },
+                  1: {'edgecolors': 'r',
+                      'facecolor': [0.0, 0.0, 1],
+                      'linewidths': 1,
+                      'alpha': 1.0
+                      },
+                  2: {'edgecolors': 'black',
+                      'facecolor': [0.56, 0.875, 0.79],
+                      'linewidths': 1,
+                      'alpha': 0.3
+                      },
+                  3: {'edgecolors': 'black',
+                      'facecolor': [0.56, 0.875, 0.79],
+                      'linewidths': 1,
+                      'alpha': 1.0
+                      }, }
+
+        for _d in range(0, dim+1):
+            _simplices = self.__get_simplices(self.head, _d)
+            poly3d_edges = [[coordinates[vert_id-1] for vert_id in face]
+                            for face in _simplices]
+            edge_collection = Poly3DCollection(poly3d_edges, **config[_d])
+            ax.add_collection3d(edge_collection)
+
+        plt.show()
+
+    def draw_simplex(self):
+        '''
+        Legacy method to draw the simplicial complex (Supports only 2D)
+        '''
+        print("Method is deprecated. Please use draw_simplex3D(dim=0)")
+        return
+        vertices = self.__get_simplices(self.head, 0)
+        edges = self.__get_tuple(self.__get_simplices(self.head, 1), 2)
+        triangles = self.__get_tuple(self.__get_simplices(self.head, 2), 3)
+        print(edges)
+        plt.figure(figsize=(8, 8))
+        plt.title("Simplex Tree")
+        ax = plt.subplot(111)
+        ax = plt.gca(projection='3d')
+        ax.set_xlim([-1.1, 1.1])
+        ax.set_ylim([-1.1, 1.1])
+        ax.set_zlim([-1.1, 1.1])
+        ax.get_xaxis().set_ticks([])
+        ax.get_yaxis().set_ticks([])
+        ax.axis('off')
+        G = nx.Graph()
+        G.add_edges_from(edges)
+        # Creating a dictionary for the position of the nodes
+        pos = nx.spring_layout(G)
+        for x, y in edges:
+            (x0, y0) = pos[x]
+            (x1, y1) = pos[y]
+            line = plt.Line2D([x0, x1], [y0, y1],
+                              color='black', zorder=1, lw=0.7)
+            ax.add_line(line)
+
+        for x, y, z in triangles:
+            (x0, y0) = pos[x]
+            (x1, y1) = pos[y]
+            (x2, y2) = pos[z]
+            tri = plt.Polygon([[x0, y0], [x1, y1], [x2, y2]],
+                              edgecolor='black', facecolor=plt.cm.Blues(0.6),
+                              zorder=2, alpha=0.4, lw=0.5)
+            ax.add_patch(tri)
+        for i in vertices:
+            (x, y) = pos[i[0]]
+            circ = plt.Circle([x, y], radius=0.02, zorder=3, lw=0.5,
+                              edgecolor='Black', facecolor=u'#ff7f0e')
+            ax.add_patch(circ)
+
+        plt.plot()
+        plt.show()
+
     def delete(self):
         pass
 
-    def filtration(self, node):
-        found_node = self.__find(node)
-        if found_node is None:
+    def filtration(self, simplex):
+        found_simplex = self.__find(simplex)
+        if found_simplex is None:
             return
-        return found_node.filtration_value
+        return found_simplex.filtration_value
 
-    def print_siblings(self, node, prefix=""):
+    def getdimension(self):
+        '''
+        dimension of simplicial complex= max_dimension of any simplex
+        Arguments:
+        '''
+        vertices = self.get_vertices()
+        dim = -1
+        for i in range(len(vertices)+1):
+            simplices = self.__get_simplices(self.head, i, [])
+            if simplices:
+                dim = dim+1
+            else:
+                return dim
+
+    def num_vertices(self):
+        vertices = self.get_vertices()
+        if vertices:
+            return len(vertices)
+        return 0
+
+    def num_simplices(self):
+        '''
+        returns the number of simplices in simplicial complex
+        '''
+        count = 0
+        vertices = self.get_vertices()
+        if vertices:
+            count = count+len(vertices)
+            for i in range(1, len(vertices)):
+                simplices = self.__get_simplices(self.head, i, [])
+                if simplices:
+                    count = count+len(simplices)
+                else:
+                    break
+        return count
+
+    def get_skeleton(self, dim):
+        vertices = self.get_vertices()
+        if vertices:
+            if(dim == 0):
+                return vertices
+            for i in range(1, dim+1):
+                simplices = self.__get_simplices(self.head, i, [])
+                if simplices:
+                    vertices = vertices+simplices
+                else:
+                    # return vertices
+                    break
+            return vertices
+
+    def __print_siblings(self, node, prefix=""):
         '''
         Iterative method to print the simplices
 
@@ -246,12 +448,12 @@ class SimplexTree:
 
         if node is None:
             return
-        temp = node1
+        temp = node
         while(temp is not None):
-            self.print_child(temp, "")
+            self.__print_child(temp, "")
             temp = temp.next
 
-    def print_child(self, node, prefix=""):
+    def __print_child(self, node, prefix=""):
         '''
         Recursive method to print the children of a node
         '''
@@ -260,7 +462,7 @@ class SimplexTree:
         prefix = prefix + str(node.name)+","
         print("Simplex: {} Filtration value :{}".format(
             node.simplex_name, node.filtration_value))
-        self.print_siblings(node.child)
+        self.__print_siblings(node.child)
 
     def print_tree(self, node=None):
         node = self.head
@@ -299,7 +501,7 @@ class SimplexTree:
 
     def del_rec(self, a, list_simplex):
         if(a == None):
-            return;
+            return
         if(len(list_simplex) == 1):
             if(a.child != None):
                 if (a.child.name == list_simplex[0]):
@@ -323,7 +525,6 @@ class SimplexTree:
                 else:
                     self.del_rec(a.next, list_simplex)
 
-
     def del_child_only(self, a, list_simplex):
         if(a == None):
             return
@@ -338,5 +539,32 @@ class SimplexTree:
             else:
                 self.del_rec(a.child, list_simplex)
 
+    def coface(self, simplex):
+        if self.head is None:
+            return None
+        lst = list()
+        vertices = self.num_vertices()
+        simplices = list()
+        for i in range(vertices):
+            sim = self.__get_simplices(self.head, i, [])
+            simplices = simplices+sim
 
+        for i in range(len(simplices)):
+            if(set(simplex).intersection(set(simplices[i])) == set(simplex)):
+                lst.append(simplices[i])
+        # lst=lst.remove(simplex)
+        return lst
 
+    def star(self, vertex):
+        if len(vertex) == 1:
+            star_vertex = self.coface(vertex)
+            return star_vertex
+
+        return
+    # def lower_star(self, vertex):
+    #     star_v = self.star(vertex)
+    #     lst=list()
+    #     for i in range(len(star_v)):
+    #         if (vertex.filtration_value >= star_v[i].filtration_value):
+    #             lst.append(star_v[i])
+    #     return lst
