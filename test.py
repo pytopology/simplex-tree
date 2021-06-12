@@ -118,7 +118,6 @@ class TestSimplex(unittest.TestCase):
         sim.insert([1, 2, 3, 4], 0.0)
         expected = 3
         actual = sim.getdimension()
-        print(actual)
 
         self.assertEqual(expected, actual)
 
@@ -130,7 +129,6 @@ class TestSimplex(unittest.TestCase):
         sim.insert([1, 2, 3, 4], 0.0)
         expected = 4
         actual = sim.num_vertices()
-        print(actual)
 
         self.assertEqual(expected, actual)
 
@@ -142,7 +140,6 @@ class TestSimplex(unittest.TestCase):
         sim.insert([1, 2, 3, 4], 0.0)
         expected = 15
         actual = sim.num_simplices()
-        print(actual)
 
         self.assertEqual(expected, actual)
 
@@ -155,7 +152,6 @@ class TestSimplex(unittest.TestCase):
         expected = [[1], [2], [3], [4], [1, 2], [
             1, 3], [1, 4], [2, 3], [2, 4], [3, 4]]
         actual = sim.get_skeleton(1)
-        print(actual)
 
         self.assertEqual(expected, actual)
 
