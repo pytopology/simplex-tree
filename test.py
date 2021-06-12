@@ -74,13 +74,11 @@ class TestSimplex(unittest.TestCase):
         '''
         sim = SimplexTree()
 
-        sim.insert([1, 2, 3, 4], 0.0)
+        sim.insert([1, 2, 3, 4])
         expected = 4.0
-        sim.insert([1, 2, 3, 4], expected)
-        # sim.print_tree()
-        actual = sim.filtration([1, 2, 3, 4])
-        # print(actual)
-        # self.assertEqual(expected, actual)
+        sim.update_filtration([1, 2, 3, 4], expected)
+        actual = sim.filtration([2, 3, 4])
+        self.assertEqual(expected, actual)
 
     def test_8(self):
         '''
@@ -158,6 +156,43 @@ class TestSimplex(unittest.TestCase):
         print(actual)
 
         self.assertEqual(expected, actual)
+
+    def test_14(self):
+        '''
+        coface
+        '''
+        sim = SimplexTree()
+        sim.insert([1, 2, 3, 4], 0.0)
+        expected = [[1, 2], [1, 2, 3], [1, 2, 4], [1, 2, 3, 4]]
+        actual = sim.coface([1, 2])
+        print(actual)
+
+        self.assertEqual(expected, actual)
+
+    def test_15(self):
+        '''
+        star
+        '''
+        sim = SimplexTree()
+        sim.insert([1, 2, 3, 4], 0.0)
+        expected = [[1], [1, 2], [1, 3], [1, 4], [
+            1, 2, 3], [1, 2, 4], [1, 3, 4], [1, 2, 3, 4]]
+        actual = sim.coface([1])
+        print(actual)
+
+        self.assertEqual(expected, actual)
+
+    # def test_16(self):
+    #     '''
+    #     lower star
+    #     '''
+    #     sim = SimplexTree()
+    #     sim.insert([1, 2, 3, 4], 0.0)
+    #     expected = [[1],[1, 2],[1,3],[1,4],[1,2,3],[1,2,4],[1,3,4],[1,2,3,4]]
+    #     actual = sim.coface([1])
+    #     print(actual)
+
+    #     self.assertEqual(expected, actual)
 
 
 if __name__ == '__main__':

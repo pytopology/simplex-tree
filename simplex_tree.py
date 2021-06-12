@@ -467,3 +467,33 @@ class SimplexTree:
     def print_tree(self, node=None):
         node = self.head
         self.__print_siblings(node.child)
+
+    def coface(self, simplex):
+        if self.head is None:
+            return None
+        lst = list()
+        vertices = self.num_vertices()
+        simplices = list()
+        for i in range(vertices):
+            sim = self.__get_simplices(self.head, i, [])
+            simplices = simplices+sim
+
+        for i in range(len(simplices)):
+            if(set(simplex).intersection(set(simplices[i])) == set(simplex)):
+                lst.append(simplices[i])
+        # lst=lst.remove(simplex)
+        return lst
+
+    def star(self, vertex):
+        if len(vertex) == 1:
+            star_vertex = self.coface(vertex)
+            return star_vertex
+
+        return
+    # def lower_star(self, vertex):
+    #     star_v = self.star(vertex)
+    #     lst=list()
+    #     for i in range(len(star_v)):
+    #         if (vertex.filtration_value >= star_v[i].filtration_value):
+    #             lst.append(star_v[i])
+    #     return lst
